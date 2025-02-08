@@ -3,8 +3,6 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
-
 public class GeminiAPI {
     private static final String API_KEY = "AIzaSyBjrtnVJb_ONj8f3QpRg1nXU8lqcq30ur8";
     private static final String API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" + API_KEY;

@@ -1,3 +1,4 @@
+// filepath: vsls:/femmehacks/Webserver.java
 import com.sun.net.httpserver.HttpServer;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpExchange;
@@ -12,9 +13,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.io.File;
+import java.nio.file.Files;
 
 public class Webserver {
     private static ArrayList<MoodEntry> entries = new ArrayList<>();
+    private static final String IMAGE_DIR = "./images"; // Directory for images
     
     public static void main(String[] args) throws IOException {
         HttpServer server = HttpServer.create(new InetSocketAddress(8000), 0);
@@ -27,24 +31,67 @@ public class Webserver {
     static class MyHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
-            try {
-                if ("POST".equals(exchange.getRequestMethod())) {
-                    handlePost(exchange);
-                } else {
-                    handleGet(exchange);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                String response = "Error: " + e.getMessage();
-                exchange.sendResponseHeaders(500, response.length());
-                try (OutputStream os = exchange.getResponseBody()) {
-                    os.write(response.getBytes());
+            String path = exchange.getRequestURI().getPath();
+            if (path.startsWith("/images/")) {
+                handleImage(exchange, path);
+            } else {
+                try {
+                    if ("POST".equals(exchange.getRequestMethod())) {
+                        handlePost(exchange);
+                    } else {
+                        handleGet(exchange);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    String response = "Error: " + e.getMessage();
+                    exchange.sendResponseHeaders(500, response.length());
+                    try (OutputStream os = exchange.getResponseBody()) {
+                        os.write(response.getBytes());
+                    }
                 }
             }
         }
 
+    private void handleImage(HttpExchange exchange, String path) throws IOException 
+    {
+            System.out.println("handleImage called with path: " + path); // Add this line
+            File imageFile = new File(IMAGE_DIR + path.substring(7));
+            System.out.println("f" + imageFile.getAbsolutePath()); // Add this line
+        if (!imageFile.exists()) 
+        {
+            System.out.println("Image not found: " + imageFile.getAbsolutePath()); // Add this line
+            String response = "Image not found";
+            exchange.sendResponseHeaders(404, response.length());
+            try (OutputStream os = exchange.getResponseBody()) {
+             os.write(response.getBytes());
+            }
+            return;
+        }
 
+    byte[] imageBytes = Files.readAllBytes(imageFile.toPath());
+    String contentType = "";
+    if (path.endsWith(".png")) {
+        contentType = "image/png";
+    } else if (path.endsWith(".jpg") || path.endsWith(".jpeg")) {
+        contentType = "image/jpeg";
+    } else if (path.endsWith(".gif")) {
+        contentType = "image/gif";
+    } else {
+        String response = "Unsupported image format";
+        exchange.sendResponseHeaders(400, response.length());
+        try (OutputStream os = exchange.getResponseBody()) {
+            os.write(response.getBytes());
+        }
+        return;
+    }
 
+    exchange.getResponseHeaders().set("Content-Type", contentType);
+    exchange.sendResponseHeaders(200, imageBytes.length);
+    try (OutputStream os = exchange.getResponseBody()) {
+        os.write(imageBytes);
+    }
+}
+        
         //updated for taking in sleep input:
         private void handlePost(HttpExchange exchange) throws IOException {
             try {
@@ -103,115 +150,140 @@ public class Webserver {
             }
         }
 
+//beginngin of new html:
 
+//end of old html
 
-        private String getFullHtml() {
-            return """
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>MoodMate</title>
-                    <style>
-                        body { font-family: Arial; max-width: 800px; margin: 0 auto; padding: 20px; }
-                        .tab { overflow: hidden; border: 1px solid #ccc; background-color: #f1f1f1; }
-                        .tab button { background-color: inherit; float: left; border: none; outline: none;
-                            cursor: pointer; padding: 14px 16px; transition: 0.3s; }
-                        .tab button:hover { background-color: #ddd; }
-                        .tab button.active { background-color: #ccc; }
-                        .tabcontent { display: none; padding: 6px 12px; border: 1px solid #ccc;
-                            border-top: none; }
-                        #Home { display: block; }
-                        .form-group { margin: 20px 0; }
-                        button.submit { background-color: #4CAF50; color: white; padding: 10px 20px; border: none; }
-                    </style>
-                </head>
-                <body>
-                    <h1>MoodMate</h1>
-                    
-                    <div class="tab">
-                        <button class="tablinks" onclick="openTab(event, 'Home')" id="defaultOpen">Home</button>
-                        <button class="tablinks" onclick="openTab(event, 'History')">History</button>
-                        <button class="tablinks" onclick="openTab(event, 'Analysis')">Analysis</button>
-                        <button class="tablinks" onclick="openTab(event, 'Resources')">Resources</button>
+//line 115 is line 1 of input for html edits
+       private String getFullHtml() {
+    return """
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>MoodMate</title>
+            <style>
+                body { 
+                    font-family: Arial; 
+                    max-width: 800px; 
+                    margin: 0 auto; 
+                    padding: 20px;
+                    background-color: #FFC0CB; /* Pink background */
+                }
+                .tab { overflow: hidden; border: 1px solid #ccc; background-color: #f1f1f1; }
+                .tab button { background-color: inherit; float: left; border: none; outline: none;
+                    cursor: pointer; padding: 14px 16px; transition: 0.3s; }
+                .tab button:hover { background-color: #ddd; }
+                .tab button.active { background-color: #ccc; }
+                .tabcontent { display: none; padding: 6px 12px; border: 1px solid #ccc;
+                    border-top: none; }
+                #Home { display: block; }
+                .form-group { margin: 20px 0; }
+                button.submit { background-color: #4CAF50; color: white; padding: 10px 20px; border: none; }
+
+                .logo-container {
+                    display: flex;
+                    align-items: center;
+                    margin-bottom: 20px;
+                }
+
+                .logo {
+                    width: 100px;
+                    height: 100px;
+                    object-fit: contain;
+                    margin-right: 20px;
+                }
+
+                .logo-title {
+                    font-size: 24px;
+                    color: #333;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="logo-container">
+                <img src="https://i.ibb.co/YBRDjt9Q/Mood-Mate-2.png" width="100" height="100">  
+            </div>
+
+            <div class="tab">
+                <button class="tablinks" onclick="openTab(event, 'Home')" id="defaultOpen">Home</button>
+                <button class="tablinks" onclick="openTab(event, 'History')">History</button>
+                <button class="tablinks" onclick="openTab(event, 'Analysis')">Analysis</button>
+                <button class="tablinks" onclick="openTab(event, 'Resources')">Resources</button>
+            </div>
+
+            <div id="Home" class="tabcontent">
+                <h2>Daily Check-in</h2>
+                <form method="post">
+                    <div class="form-group">
+                        <label>Date:</label><br>
+                        <input type="date" name="date" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Hours of sleep last night:</label><br>
+                        <input type="number" name="sleep" min="0" max="24" step="0.5" required>
                     </div>
 
-                    <div id="Home" class="tabcontent">
-                        <h2>Daily Check-in</h2>
-                        <form method="post">
-
-
-                            <div class="form-group">
-                                <label>Date:</label><br>
-                                <input type="date" name="date" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Hours of sleep last night:</label><br>
-                                <input type="number" name="sleep" min="0" max="24" step="0.5" required>
-                            </div>
-
-
-                            <div class="form-group">
-                                <label>How are you feeling today? (1-5):</label><br>
-                                <select name="mood" required>
-                                    <option value="1">1 - Very Bad</option>
-                                    <option value="2">2 - Bad</option>
-                                    <option value="3">3 - Okay</option>
-                                    <option value="4">4 - Good</option>
-                                    <option value="5">5 - Excellent</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Add a note about your day:</label><br>
-                                <textarea name="note" rows="4" cols="50"></textarea>
-                            </div>
-                            <button type="submit" class="submit">Save Entry</button>
-                        </form>
+                    <div class="form-group">
+                        <label>How are you feeling today? (1-5):</label><br>
+                        <select name="mood" required>
+                            <option value="1">1 - Very Bad</option>
+                            <option value="2">2 - Bad</option>
+                            <option value="3">3 - Okay</option>
+                            <option value="4">4 - Good</option>
+                            <option value="5">5 - Excellent</option>
+                        </select>
                     </div>
-
-                    <div id="History" class="tabcontent">
-                        <h2>Your Previous Entries</h2>
-                        """ + getPreviousEntries() + """
+                    <div class="form-group">
+                        <label>Add a note about your day:</label><br>
+                        <textarea name="note" rows="4" cols="50"></textarea>
                     </div>
+                    <button type="submit" class="submit">Save Entry</button>
+                </form>
+            </div>
 
+            <div id="History" class="tabcontent">
+                <h2>Your Previous Entries</h2>
+                """ + getPreviousEntries() + """
+            </div>
 
+            <!--- new w extra auggestions --->
+            <div id="Analysis" class="tabcontent">
+                <h2>Weekly Analysis</h2>
+                """ + getAnalysis() + """
+            </div>
+            <!--- end new --->
 
-                    <!--- new w extra auggestions --->
-                    <div id="Analysis" class="tabcontent">
-                        <h2>Weekly Analysis</h2>
-                        """ + getAnalysis() + """
-                    </div>
-                    <!--- end new --->
+            <div id="Resources" class="tabcontent">
+                <h2>Helpful Resources</h2>
+                <ul>
+                    <li>Mental Health Hotline: 988</li>
+                    <li>Wellness Tips: [https://app.projecthealthyminds.com/crisis?gad_source=1&gclid=CjwKCAiAnpy9BhAkEiwA-P8N4sXuYO8tvCCJiscm1-zT7IuiJwpv4Eomm7zTeThds71Hfs91RtJVyRoCX7gQAvD_BwE] & [https://www.cdc.gov/mental-health/caring/index.html#:~:text=Treatment%20and%20support&text=Visit%20findtreatment.gov%20–%20a%20confidential,Code%20to%20435748%20(HELP4U)]</li>
+                    <li>Fun Games Guide: [https://www.crazygames.com/t/relaxing]</li>
+                    <li>Meditation Guide: [https://www.mindful.org/how-to-meditate/]</li>
+                </ul>
+            </div>
 
-                    <div id="Resources" class="tabcontent">
-                        <h2>Helpful Resources</h2>
-                        <ul>
-                            <li>Mental Health Hotline: 988</li>
-                            <li>Wellness Tips</li>
-                            <li>Meditation Guides</li>
-                        </ul>
-                    </div>
+            <script>
+            function openTab(evt, tabName) {
+                var i, tabcontent, tablinks;
+                tabcontent = document.getElementsByClassName("tabcontent");
+                for (i = 0; i < tabcontent.length; i++) {
+                    tabcontent[i].style.display = "none";
+                }
+                tablinks = document.getElementsByClassName("tablinks");
+                for (i = 0; i < tablinks.length; i++) {
+                    tablinks[i].className = tablinks[i].className.replace(" active", "");
+                }
+                document.getElementById(tabName).style.display = "block";
+                evt.currentTarget.className += " active";
+            }
 
-                    <script>
-                    function openTab(evt, tabName) {
-                        var i, tabcontent, tablinks;
-                        tabcontent = document.getElementsByClassName("tabcontent");
-                        for (i = 0; i < tabcontent.length; i++) {
-                            tabcontent[i].style.display = "none";
-                        }
-                        tablinks = document.getElementsByClassName("tablinks");
-                        for (i = 0; i < tablinks.length; i++) {
-                            tablinks[i].className = tablinks[i].className.replace(" active", "");
-                        }
-                        document.getElementById(tabName).style.display = "block";
-                        evt.currentTarget.className += " active";
-                    }
-
-                    document.getElementById("defaultOpen").click();
-                    </script>
-                </body>
-                </html>
-                """;
-        }
+            document.getElementById("defaultOpen").click();
+            </script>
+        </body>
+        </html>
+        """;
+}
 
         private Map<String, String> parseFormData(String formData) throws IOException {
             Map<String, String> map = new HashMap<>();
@@ -226,7 +298,6 @@ public class Webserver {
             }
             return map;
         }
-
 
         //updated for sleep and date data in previous entries:
         private String getPreviousEntries() {
@@ -326,8 +397,6 @@ public class Webserver {
         }
         //end of updated analysis method
 
-
-        
         //Helper methods
 
         // new getSleepMoodCorrelation method
@@ -341,11 +410,7 @@ public class Webserver {
         }
         //end of new getSleepMoodCorrelation method
 
-
-
-
         // new getOverallAssessment method
-
         private String getOverallAssessment(double avgMood, double avgSleep) {
             StringBuilder tips = new StringBuilder("<ul style='list-style-type: none; padding-left: 15px;'>");
             
@@ -377,8 +442,6 @@ public class Webserver {
         }
         //end of new getOverallAssessment method
 
-
-
         private String formatDate(String date) {
             try {
                 String[] parts = date.split("-");
@@ -390,12 +453,5 @@ public class Webserver {
             }
             return date;
         }
-
-
     }
 }
-
-
-
-//THE END HUZZAH TADA
-
